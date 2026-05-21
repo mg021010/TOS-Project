@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToyOS (TOS) 미니 쉘 및 OS 시뮬레이터 프로젝트 발표자료</title>
+    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --accent: #0ea5e9;
+            --accent-light: #e0f2fe;
+            --border: #e2e8f0;
+            --code-bg: #f1f5f9;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 슬라이드 컨테이너 */
+        .presentation-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.15), 0 8px 10px -6px rgba(148, 163, 184, 0.15);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            min-height: 600px;
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 슬라이드 헤더 */
+        .slide-header {
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .slide-step {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: var(--primary-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .slide-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* 슬라이드 바디 레이아웃 */
+        .slide-content {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 2.5rem;
+            flex: 1;
+            align-items: start;
+        }
+
+        .slide-content.full-width {
+            grid-template-columns: 1fr;
+        }
+
+        /* 설명 영역 */
+        .desc-section h3 {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .desc-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .desc-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        .desc-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        /* 코드 및 명령어 상자 */
+        .command-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .command-box::before {
+            content: "실행 명령어 (터미널 복사용)";
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: var(--bg-card);
+            padding: 0 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .command-text {
+            color: var(--text-main);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: sans-serif;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* 캡처 이미지 / 플레이스홀더 영역 */
+        .visual-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 320px;
+            justify-content: center;
+        }
+
+        .capture-placeholder {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 300px;
+            transition: all 0.3s;
+        }
+
+        .capture-placeholder:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            opacity: 0.9;
+        }
+
+        .placeholder-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .placeholder-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .placeholder-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .capture-image {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border);
+            display: none; /* 이미지가 로드되면 JS로 보이고, 플레이스홀더는 숨김 */
+        }
+
+        /* 슬라이드 푸터 및 컨트롤 */
+        .slide-footer {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .author-info {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .navigation-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* 프로그레스 바 */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 표지 전용 디자인 */
+        .title-slide {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .title-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--text-main);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.35rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 1rem;
+        }
+
+        .feature-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .feature-card h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* 키보드 가이드 */
+        .keyboard-guide {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.08);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 10px;
+        }
+
+        .key-cap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="presentation-container">
+
+        <!-- Slide 1: 타이틀 -->
+        <div class="slide title-slide active" id="slide-1">
+            <span class="title-badge">OS CLASS PROJECT</span>
+            <h1 class="main-title">ToyOS (TOS) 미니 쉘 및<br>OS 시뮬레이터 프로젝트 발표</h1>
+            <p class="subtitle">사용자 쉘 개발부터 가상 메모리 매핑 시뮬레이션까지 (Step 1 ~ 6 단계 전체 구현 완료)</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>User Shell Layer</h4>
+                    <p>내장/외부 명령 처리 쉘 구축 및 스케줄링 조작 명령어 바인딩</p>
+                </div>
+                <div class="feature-card">
+                    <h4>CPU Scheduler</h4>
+                    <p>FCFS/RR 알고리즘, 컨텍스트 스위치, I/O 대기 큐 및 시뮬레이션 틱 제어</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Memory Manager</h4>
+                    <p>1KB 가상 물리 주소 구조의 페이징 매핑 및 Page Fault 예외 시뮬레이션</p>
+                </div>
+            </div>
+
+            <div class="slide-footer" style="width: 100%;">
+                <div class="author-info">제출자: OS 수업 수강생</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="nextSlide()">시작하기 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Step 1 & 2 -->
+        <div class="slide" id="slide-2">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Step 1 & 2</span>
+                    <h2 class="slide-title">스케줄러 설정 및 제어 명령어 인터페이스</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 구현 내용</h3>
+                    <ul class="desc-list">
+                        <li>스케줄러 동작을 설정하고 틱 단위 시뮬레이션을 수행하기 위한 인터페이스 확장.</li>
+                        <li><strong>set_sched &lt;fcfs|rr&gt; [quantum]</strong>: 스케줄링 알고리즘 변경 및 RR 퀀텀 시간 동적 지정.</li>
+                        <li><strong>step</strong>: 시스템 전체 상태를 한 틱(1초) 진행하고, 상태 변화를 화면에 시각적으로 표시.</li>
+                        <li><strong>run</strong>: 모든 프로세스가 종료될 때까지 <code>step</code>을 자동 반복 수행.</li>
+                        <li><strong>stats & reset</strong>: 실행 통계(대기시간, 컨텍스트 스위칭 수) 확인 및 시뮬레이션 환경 초기화.</li>
+                    </ul>
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand(this)">복사</button>
+                        <div class="command-text">./TOS
+help
+set_sched fcfs
+exit</div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-2">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">터미널 실행 결과 캡처 영역</div>
+                        <p class="placeholder-desc">위 명령어를 실행하여 <strong>help</strong>와 <strong>set_sched fcfs</strong>가 출력되는 터미널 화면을 캡처하여 <code>images/step1_2.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/step1_2.png" class="capture-image" id="img-2" alt="Step 1 & 2 결과 화면">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">ToyOS 시뮬레이터 제어</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">2 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Step 3 (FCFS) -->
+        <div class="slide" id="slide-3">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Step 3</span>
+                    <h2 class="slide-title">FCFS (First-Come, First-Served) 스케줄링</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 구현 내용</h3>
+                    <ul class="desc-list">
+                        <li>준비 큐(Ready Queue)에 먼저 삽입된 프로세스에 CPU를 우선 할당하는 비선점형 스케줄러 구현.</li>
+                        <li>중간에 CPU를 빼앗기지 않고 프로세스의 남은 실행 시간(Remaining Time)이 0이 될 때까지 연속 실행.</li>
+                        <li>CPU를 양보할 때 준비 큐의 맨 앞에서 다음 프로세스를 디스패치하며 문맥 교환 발생.</li>
+                        <li>실행 중이지 않고 Ready Queue에 대기 중인 모든 프로세스의 대기 시간(Waiting Time)을 매 틱마다 1씩 증가시켜 통계 신뢰도 확보.</li>
+                    </ul>
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand(this)">복사</button>
+                        <div class="command-text">create P1 5
+create P2 3
+set_sched fcfs
+run
+stats
+exit</div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-3">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">FCFS 실행 결과 캡처 영역</div>
+                        <p class="placeholder-desc">위 시나리오 명령어를 실행하여 <strong>P1이 먼저 끝난 뒤 P2가 수행되는 FCFS 실행 로그 및 통계(stats)</strong>를 캡처하여 <code>images/step3_fcfs.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/step3_fcfs.png" class="capture-image" id="img-3" alt="FCFS 실행 결과">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">비선점형 기본 스케줄링</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">3 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Step 4 (I/O & Waiting Queue) -->
+        <div class="slide" id="slide-4">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Step 4</span>
+                    <h2 class="slide-title">I/O 대기 및 대기 큐(Waiting Queue) 구현</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 구현 내용</h3>
+                    <ul class="desc-list">
+                        <li>프로세스가 실행되는 중 I/O 요청을 보내고 대기 상태에 머무는 OS 동작 흐름 시뮬레이션.</li>
+                        <li><strong>create &lt;name&gt; &lt;time&gt; io &lt;at&gt; &lt;wait&gt;</strong>: <code>at</code> 시점에 <code>wait</code> 초 동안 I/O를 사용하는 프로세스 생성.</li>
+                        <li>프로세스가 실행 중 누적 실행시간이 <code>io_at</code>에 도달하면 즉시 <strong>PROCESS_WAITING</strong> 상태로 전이되어 대기 큐(Waiting Queue)로 이동.</li>
+                        <li>매 틱마다 대기 큐 안의 프로세스들의 남은 I/O 시간(<code>io_remaining</code>)을 1씩 감소시키며, 0에 도달하면 <strong>PROCESS_READY</strong>로 복귀시켜 준비 큐에 재진입.</li>
+                    </ul>
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand(this)">복사</button>
+                        <div class="command-text">create P1 5 io 2 3
+set_sched fcfs
+run
+stats
+exit</div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-4">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">I/O 대기 실행 결과 캡처 영역</div>
+                        <p class="placeholder-desc">위 명령어를 실행하여 <strong>P1이 Time 2에 Waiting Queue로 이동하고, I/O Completed 후 복귀하여 완료하는 로그</strong>를 캡처하여 <code>images/step4_io.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/step4_io.png" class="capture-image" id="img-4" alt="I/O Waiting Queue 결과">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">I/O 이벤트와 상태 전이</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">4 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Step 5 (Round-Robin) -->
+        <div class="slide" id="slide-5">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Step 5</span>
+                    <h2 class="slide-title">Round-Robin (RR) 선점형 스케줄링</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 구현 내용</h3>
+                    <ul class="desc-list">
+                        <li>모든 프로세스가 일정한 타임 슬라이스(Quantum) 동안 동등하게 CPU를 공유하는 선점형 스케줄링.</li>
+                        <li>현재 프로세스의 연속 실행 시간이 설정된 타임 퀀텀(기본 3)에 도달하면 실행을 강제 중단(Preemption)시킴.</li>
+                        <li>해당 프로세스의 상태를 <strong>PROCESS_READY</strong>로 변경하고 준비 큐의 맨 뒤에 다시 삽입.</li>
+                        <li>타임 슬라이스 소진, 프로세스 완료, 혹은 I/O 블로킹 발생 시에 즉각 문맥 교환을 수행하여 CPU 분할 사용이 최적으로 수행됨을 검증.</li>
+                    </ul>
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand(this)">복사</button>
+                        <div class="command-text">create P1 5
+create P2 3
+set_sched rr 2
+run
+stats
+exit</div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-5">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">Round-Robin 실행 결과 캡처 영역</div>
+                        <p class="placeholder-desc">위 명령을 실행하여 <strong>P1이 2틱 후 선점(Preempt)되고 P2로 교체되는 라운드 로빈 교차 진행 화면</strong>을 캡처하여 <code>images/step5_rr.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/step5_rr.png" class="capture-image" id="img-5" alt="Round Robin 결과">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">선점형 시분할 스케줄링</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">5 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Step 6 (Memory Simulation) -->
+        <div class="slide" id="slide-6">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Step 6</span>
+                    <h2 class="slide-title">가상 메모리 페이징 및 Page Fault 시뮬레이션</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 구현 내용</h3>
+                    <ul class="desc-list">
+                        <li><strong>물리 RAM 1KB (프레임 크기 128B, 총 8개 프레임)</strong> 및 가상 페이지 테이블(최대 16개 엔트리) 구조 시뮬레이션.</li>
+                        <li><strong>memsim &lt;scenario_file&gt;</strong> 명령어로 시나리오 파일을 순차 해석.</li>
+                        <li><code>ALLOC &lt;page&gt;</code>: 비어 있는 물리 메모리 프레임을 검색하여 페이지 테이블에 유효 비트(is_valid=1)와 함께 순차 매핑.</li>
+                        <li><code>ACCESS &lt;virtual_addr&gt;</code>: 주소 변환(Address Translation) 수행.
+                          <br>&bull; 가상 페이지 번호(VA / Page Size)가 유효(Valid)할 시, 매핑된 프레임 번호로 변환하여 물리 주소(PA) 계산.
+                          <br>&bull; 매핑되지 않은 가상 페이지 접근 시 <strong>Page Fault</strong> 예외 발생.</li>
+                    </ul>
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand(this)">복사</button>
+                        <div class="command-text">cat scenario.txt
+memsim scenario.txt
+exit</div>
+                    </div>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-6">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">메모리 시뮬레이션 결과 캡처 영역</div>
+                        <p class="placeholder-desc">위 명령을 실행하여 <strong>ALLOC, ACCESS, Page Fault 발생 및 최종 Page Table 덤프가 정상 출력되는 화면</strong>을 캡처하여 <code>images/step6_memory.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/step6_memory.png" class="capture-image" id="img-6" alt="메모리 시뮬레이션 결과">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">가상 페이징 및 주소 변환</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">6 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 종합 아키텍처 및 설계 검증 -->
+        <div class="slide" id="slide-7">
+            <div class="slide-header">
+                <div>
+                    <span class="slide-step">Architecture & validation</span>
+                    <h2 class="slide-title">ToyOS 시스템 구조 및 소스 파일 매핑</h2>
+                </div>
+            </div>
+            <div class="slide-content">
+                <div class="desc-section">
+                    <h3>💡 컴포넌트별 소스 파일 및 아키텍처 구조</h3>
+                    <ul class="desc-list">
+                        <li><strong>유저 쉘 인터페이스 (`user/shell`)</strong>:
+                            <br>&bull; [parser.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/user/shell/parser.c) / [builtins.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/user/shell/builtins.c) - 쉘 입력 분석 및 시뮬레이터 제어 기능 연결.
+                            <br>&bull; [executor.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/user/shell/executor.c) - 일반 외부 명령(ls, cat 등) 실행을 위한 Fork-Exec 구현.
+                        </li>
+                        <li><strong>프로세스 및 스케줄러 (`core/`)</strong>:
+                            <br>&bull; [process.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/core/process/process.c) - PCB 상태 전이(New &rarr; Ready &rarr; Running &rarr; Waiting &rarr; Terminated) 관리.
+                            <br>&bull; [scheduler.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/core/scheduler/scheduler.c) - 시간 흐름에 따른 큐 관리(Ready, Waiting) 및 FCFS/RR 알고리즘.
+                        </li>
+                        <li><strong>가상 메모리 시뮬레이터 (`core/memory`)</strong>:
+                            <br>&bull; [memory.c](file:///wsl.localhost/Ubuntu/home/user/ToyOS/core/memory/memory.c) - 1KB 물리 크기의 프레임 순차 배치 및 주소 변환 알고리즘.
+                        </li>
+                    </ul>
+                </div>
+                <div class="visual-section">
+                    <div class="capture-placeholder" id="placeholder-7">
+                        <div class="placeholder-icon">📸</div>
+                        <div class="placeholder-title">컴파일 빌드 결과 캡처 영역</div>
+                        <p class="placeholder-desc">프로젝트 빌드(<strong>make clean ; make</strong>) 시 오류 없이 성공적으로 컴파일되는 터미널 로그를 캡처하여 <code>images/build_result.png</code>로 저장하세요.</p>
+                    </div>
+                    <img src="images/build_result.png" class="capture-image" id="img-7" alt="빌드 결과 화면">
+                </div>
+            </div>
+            <div class="slide-footer">
+                <div class="author-info">시스템 모듈 설계 검증</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">7 / 8</span>
+                    <button class="nav-btn" onclick="nextSlide()">다음 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 결론 및 정리 -->
+        <div class="slide title-slide" id="slide-8">
+            <span class="title-badge">CONCLUSION</span>
+            <h1 class="main-title">프로젝트 성과 및 의의</h1>
+            <p class="subtitle" style="text-align: left; max-width: 700px; margin: 0 auto;">
+                1. <strong>아키텍처 분리 설계</strong>: 사용자 명령 입력을 처리하는 쉘 레이어와 내부 상태를 관리하는 코어 커널 시뮬레이터를 완벽하게 격리 구현하였습니다.
+                <br><br>
+                2. <strong>상태 기반 라이프사이클</strong>: 프로세스가 준비, 실행, 대기, 종료 상태로 명확하게 분기하며 큐 간 이동을 수행하고 대기 시간을 누적 계산하는 OS 핵심 메커니즘을 충실히 모델링했습니다.
+                <br><br>
+                3. <strong>페이징 & 주소 번역</strong>: 가상 메모리를 물리 프레임 주소에 매핑하고 Page Fault를 해결해가는 가상 주소 번역기의 기초 원리를 구현 및 검증했습니다.
+            </p>
+
+            <div class="slide-footer" style="width: 100%;">
+                <div class="author-info">ToyOS 프로젝트 발표를 마칩니다. 감사합니다.</div>
+                <div class="navigation-controls">
+                    <button class="nav-btn" onclick="prevSlide()">← 이전</button>
+                    <span class="page-indicator">8 / 8</span>
+                    <button class="nav-btn" onclick="goToStart()">처음으로</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 키보드 조작 가이드 -->
+    <div class="keyboard-guide">
+        <span>키보드 조작:</span>
+        <span>이전 슬라이드 <span class="key-cap">←</span></span>
+        <span>다음 슬라이드 <span class="key-cap">→</span> 또는 <span class="key-cap">Space</span></span>
+    </div>
+
+    <script>
+        const totalSlides = 8;
+        let currentSlide = 1;
+
+        function updateSlide() {
+            // 슬라이드 활성화 토글
+            for (let i = 1; i <= totalSlides; i++) {
+                const slide = document.getElementById(`slide-${i}`);
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            }
+
+            // 프로그레스 바 업데이트
+            const progressBar = document.getElementById('progressBar');
+            const percent = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+            progressBar.style.width = `${percent}%`;
+
+            // 이전/다음 버튼 비활성화 제어
+            const prevBtns = document.querySelectorAll('.nav-btn');
+            prevBtns.forEach(btn => {
+                if (btn.innerText.includes('이전') && currentSlide === 1) {
+                    btn.disabled = true;
+                } else {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToStart() {
+            currentSlide = 1;
+            updateSlide();
+        }
+
+        // 키보드 네비게이션 이벤트
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                event.preventDefault();
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                prevSlide();
+            }
+        });
+
+        // 캡처 이미지 존재 여부에 따라 플레이스홀더를 숨기고 이미지를 보여주는 로직
+        // 이미지를 images/ 폴더에 정해진 이름으로 추가하면 자동으로 반영됩니다.
+        window.addEventListener('load', function() {
+            for (let i = 2; i <= 7; i++) {
+                const img = document.getElementById(`img-${i}`);
+                const placeholder = document.getElementById(`placeholder-${i}`);
+                
+                if (img) {
+                    // 이미지 로드 성공 시
+                    img.addEventListener('load', function() {
+                        placeholder.style.display = 'none';
+                        img.style.display = 'block';
+                    });
+                    
+                    // 만약 브라우저 캐싱 등으로 로드 완료 이벤트가 이미 지나간 경우 확인
+                    if (img.complete && img.naturalWidth > 0) {
+                        placeholder.style.display = 'none';
+                        img.style.display = 'block';
+                    }
+                }
+            }
+        });
+
+        // 클립보드 복사 함수
+        function copyCommand(btn) {
+            const commandText = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(commandText).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "복사 완료!";
+                btn.style.background = "var(--success)";
+                btn.style.color = "white";
+                btn.style.borderColor = "var(--success)";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "var(--bg-card)";
+                    btn.style.color = "var(--text-main)";
+                    btn.style.borderColor = "var(--border)";
+                }, 1500);
+            }).catch(err => {
+                console.error('클립보드 복사 실패:', err);
+            });
+        }
+    </script>
+</body>
+</html>
