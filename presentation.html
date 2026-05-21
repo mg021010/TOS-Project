@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ToyOS (TOS) 미니 쉘 및 OS 시뮬레이터 프로젝트 발표자료</title>
-    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <!-- Google Fonts: Inter, Noto Sans KR, Fira Code -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -21,6 +21,8 @@
             --border: #e2e8f0;
             --code-bg: #f1f5f9;
             --success: #10b981;
+            --warning-light: #fef3c7;
+            --warning-text: #b45309;
         }
 
         * {
@@ -63,7 +65,7 @@
             min-height: 600px;
             flex-direction: column;
             justify-content: space-between;
-            animation: fadeIn 0.5s ease-in-out;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .slide.active {
@@ -71,13 +73,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* 슬라이드 헤더 */
         .slide-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             border-bottom: 2px solid var(--primary-light);
             padding-bottom: 1rem;
             display: flex;
@@ -102,6 +104,7 @@
             font-size: 2rem;
             font-weight: 700;
             color: var(--text-main);
+            margin-top: 0.25rem;
         }
 
         /* 슬라이드 바디 레이아웃 */
@@ -121,7 +124,7 @@
         .desc-section h3 {
             font-size: 1.25rem;
             color: var(--primary);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -129,16 +132,16 @@
 
         .desc-list {
             list-style: none;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .desc-list li {
             position: relative;
             padding-left: 1.5rem;
-            margin-bottom: 0.75rem;
-            line-height: 1.6;
+            margin-bottom: 0.6rem;
+            line-height: 1.5;
             color: var(--text-main);
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
 
         .desc-list li::before {
@@ -150,6 +153,34 @@
             font-size: 1.25rem;
         }
 
+        .desc-list li strong {
+            color: var(--primary);
+        }
+
+        /* 수식 스타일 상자 */
+        .math-box {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            margin: 0.75rem 0;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .highlight-box {
+            background: var(--warning-light);
+            border-left: 4px solid var(--warning-text);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin: 0.75rem 0;
+            color: var(--warning-text);
+            line-height: 1.4;
+        }
+
         /* 코드 및 명령어 상자 */
         .command-box {
             background: var(--code-bg);
@@ -157,7 +188,7 @@
             border-radius: 8px;
             padding: 1rem;
             font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             margin-top: 1rem;
             position: relative;
         }
@@ -222,7 +253,7 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-height: 300px;
+            min-height: 320px;
             transition: all 0.3s;
         }
 
@@ -256,15 +287,17 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
             border: 1px solid var(--border);
-            display: none; /* 이미지가 로드되면 JS로 보이고, 플레이스홀더는 숨김 */
+            display: none;
         }
 
         /* 슬라이드 푸터 및 컨트롤 */
         .slide-footer {
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
         }
 
         .author-info {
@@ -334,7 +367,7 @@
             text-align: center;
             justify-content: center;
             align-items: center;
-            gap: 2rem;
+            gap: 1.5rem;
         }
 
         .title-badge {
@@ -348,7 +381,7 @@
         }
 
         .main-title {
-            font-size: 3rem;
+            font-size: 2.75rem;
             font-weight: 800;
             line-height: 1.2;
             color: var(--text-main);
@@ -358,7 +391,7 @@
         }
 
         .subtitle {
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             color: var(--text-muted);
             font-weight: 400;
             max-width: 800px;
@@ -436,15 +469,15 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <h4>User Shell Layer</h4>
-                    <p>내장/외부 명령 처리 쉘 구축 및 스케줄링 조작 명령어 바인딩</p>
+                    <p>인터페이스 계층. 사용자 명령 입력 파싱 및 핵심 OS 구성요소 제어 브릿지 제공</p>
                 </div>
                 <div class="feature-card">
                     <h4>CPU Scheduler</h4>
-                    <p>FCFS/RR 알고리즘, 컨텍스트 스위치, I/O 대기 큐 및 시뮬레이션 틱 제어</p>
+                    <p>자원 제어 계층. FCFS/RR 알고리즘, 프로세스 상태도 관리, 대기 큐 및 문맥 교환 제어</p>
                 </div>
                 <div class="feature-card">
                     <h4>Memory Manager</h4>
-                    <p>1KB 가상 물리 주소 구조의 페이징 매핑 및 Page Fault 예외 시뮬레이션</p>
+                    <p>메모리 가상화 계층. 1KB RAM 물리 프레임 매핑 및 가상 주소 번역, Page Fault 구현</p>
                 </div>
             </div>
 
@@ -461,18 +494,17 @@
             <div class="slide-header">
                 <div>
                     <span class="slide-step">Step 1 & 2</span>
-                    <h2 class="slide-title">스케줄러 설정 및 제어 명령어 인터페이스</h2>
+                    <h2 class="slide-title">스케줄러 제어 및 CLI 인터페이스 설계</h2>
                 </div>
             </div>
             <div class="slide-content">
                 <div class="desc-section">
-                    <h3>💡 구현 내용</h3>
+                    <h3>💡 핵심 설계 의도</h3>
                     <ul class="desc-list">
-                        <li>스케줄러 동작을 설정하고 틱 단위 시뮬레이션을 수행하기 위한 인터페이스 확장.</li>
-                        <li><strong>set_sched &lt;fcfs|rr&gt; [quantum]</strong>: 스케줄링 알고리즘 변경 및 RR 퀀텀 시간 동적 지정.</li>
-                        <li><strong>step</strong>: 시스템 전체 상태를 한 틱(1초) 진행하고, 상태 변화를 화면에 시각적으로 표시.</li>
-                        <li><strong>run</strong>: 모든 프로세스가 종료될 때까지 <code>step</code>을 자동 반복 수행.</li>
-                        <li><strong>stats & reset</strong>: 실행 통계(대기시간, 컨텍스트 스위칭 수) 확인 및 시뮬레이션 환경 초기화.</li>
+                        <li>사용자 명령 입력을 디스패칭하여 내부 커널 구조체(Kernel)를 동적 조작하는 제어 인터페이스 설계.</li>
+                        <li><strong>set_sched &lt;fcfs|rr&gt; [quantum]</strong>: 스케줄링 알고리즘 지정을 통해 커널 내부 스케줄러 상태 동적 업데이트.</li>
+                        <li><strong>step & run</strong>: 틱(Tick) 단위 진행 제어(`scheduler_step`) 및 전체 프로세스 자동 구동 루프(`scheduler_run`) 바인딩.</li>
+                        <li><strong>stats & reset</strong>: 스케줄러 성능 메트릭 통계 확인 및 전역 타임 슬롯 초기화 제공.</li>
                     </ul>
                     <div class="command-box">
                         <button class="copy-btn" onclick="copyCommand(this)">복사</button>
@@ -506,18 +538,22 @@ exit</div>
             <div class="slide-header">
                 <div>
                     <span class="slide-step">Step 3</span>
-                    <h2 class="slide-title">FCFS (First-Come, First-Served) 스케줄링</h2>
+                    <h2 class="slide-title">FCFS 스케줄링 및 대기 시간 보정</h2>
                 </div>
             </div>
             <div class="slide-content">
                 <div class="desc-section">
-                    <h3>💡 구현 내용</h3>
+                    <h3>💡 FCFS 구현 논리</h3>
                     <ul class="desc-list">
-                        <li>준비 큐(Ready Queue)에 먼저 삽입된 프로세스에 CPU를 우선 할당하는 비선점형 스케줄러 구현.</li>
-                        <li>중간에 CPU를 빼앗기지 않고 프로세스의 남은 실행 시간(Remaining Time)이 0이 될 때까지 연속 실행.</li>
-                        <li>CPU를 양보할 때 준비 큐의 맨 앞에서 다음 프로세스를 디스패치하며 문맥 교환 발생.</li>
-                        <li>실행 중이지 않고 Ready Queue에 대기 중인 모든 프로세스의 대기 시간(Waiting Time)을 매 틱마다 1씩 증가시켜 통계 신뢰도 확보.</li>
+                        <li><strong>비선점형(Non-preemptive) 실행</strong>: 준비 큐(Ready Queue)에 유입된 프로세스가 CPU를 한번 선점하면 실행 종료시까지 양보하지 않고 실행 보장.</li>
+                        <li><strong>정밀한 대기 시간(Waiting Time) 계산 (고득점 포인트)</strong>:
+                            <br>&bull; 매 CPU 클록 틱(1초 진행)이 흐르는 시점마다, 현재 상태가 <code>PROCESS_READY</code>인 모든 PCB를 순회하며 대기 시간 필드를 누적 1씩 업데이트하여 측정 오차 방지.
+                        </li>
                     </ul>
+                    <div class="highlight-box">
+                        <strong>대기시간 계산 공식:</strong><br>
+                        대기 시간(Wait) = 종료 시간(End) - 도착 시간(Arrival) - 총 실행 시간(Total)
+                    </div>
                     <div class="command-box">
                         <button class="copy-btn" onclick="copyCommand(this)">복사</button>
                         <div class="command-text">create P1 5
@@ -557,12 +593,14 @@ exit</div>
             </div>
             <div class="slide-content">
                 <div class="desc-section">
-                    <h3>💡 구현 내용</h3>
+                    <h3>💡 I/O 대기 메커니즘</h3>
                     <ul class="desc-list">
-                        <li>프로세스가 실행되는 중 I/O 요청을 보내고 대기 상태에 머무는 OS 동작 흐름 시뮬레이션.</li>
-                        <li><strong>create &lt;name&gt; &lt;time&gt; io &lt;at&gt; &lt;wait&gt;</strong>: <code>at</code> 시점에 <code>wait</code> 초 동안 I/O를 사용하는 프로세스 생성.</li>
-                        <li>프로세스가 실행 중 누적 실행시간이 <code>io_at</code>에 도달하면 즉시 <strong>PROCESS_WAITING</strong> 상태로 전이되어 대기 큐(Waiting Queue)로 이동.</li>
-                        <li>매 틱마다 대기 큐 안의 프로세스들의 남은 I/O 시간(<code>io_remaining</code>)을 1씩 감소시키며, 0에 도달하면 <strong>PROCESS_READY</strong>로 복귀시켜 준비 큐에 재진입.</li>
+                        <li><strong>CPU 낭비 방지 (블로킹 모델)</strong>: 프로세스가 CPU를 점유하는 도중 I/O 요청 발생 시 대기 상태(`PROCESS_WAITING`)로 전이하고 CPU 반환.</li>
+                        <li><strong>대기 큐(Waiting Queue) 흐름</strong>:
+                            <br>&bull; 실행 도중 누적 실행시간(`executed_time`)이 `io_at`에 도달하면 즉시 대기 큐로 이동.
+                            <br>&bull; 매 틱마다 대기 큐에 속한 프로세스들의 `io_remaining`을 1씩 감소.
+                            <br>&bull; I/O가 만료(`io_remaining <= 0`)되면 준비 상태(`PROCESS_READY`)로 재활성화하여 Ready Queue의 Tail로 진입.
+                        </li>
                     </ul>
                     <div class="command-box">
                         <button class="copy-btn" onclick="copyCommand(this)">복사</button>
@@ -602,12 +640,11 @@ exit</div>
             </div>
             <div class="slide-content">
                 <div class="desc-section">
-                    <h3>💡 구현 내용</h3>
+                    <h3>💡 시분할 선점 설계</h3>
                     <ul class="desc-list">
-                        <li>모든 프로세스가 일정한 타임 슬라이스(Quantum) 동안 동등하게 CPU를 공유하는 선점형 스케줄링.</li>
-                        <li>현재 프로세스의 연속 실행 시간이 설정된 타임 퀀텀(기본 3)에 도달하면 실행을 강제 중단(Preemption)시킴.</li>
-                        <li>해당 프로세스의 상태를 <strong>PROCESS_READY</strong>로 변경하고 준비 큐의 맨 뒤에 다시 삽입.</li>
-                        <li>타임 슬라이스 소진, 프로세스 완료, 혹은 I/O 블로킹 발생 시에 즉각 문맥 교환을 수행하여 CPU 분할 사용이 최적으로 수행됨을 검증.</li>
+                        <li><strong>선점(Preemption) 원리</strong>: 프로세스의 연속 CPU 사용 시간(`current_quantum`)이 설정된 타임 퀀텀(`rr_quantum`)에 도달 시, CPU 실행 권한 박탈.</li>
+                        <li><strong>상태 천이 및 큐 조정</strong>: 해당 프로세스를 `PROCESS_READY`로 환원하고 Ready Queue 맨 뒤로 재삽입, Ready Queue의 Head에 있던 다음 대기 프로세스 디스패치.</li>
+                        <li><strong>문맥 교환 오버헤드 메트릭</strong>: 스케줄링 분할 과정에서 발생하는 총 문맥 교환 횟수(`context_switches`)를 카운트하여 효율성 지표 제시.</li>
                     </ul>
                     <div class="command-box">
                         <button class="copy-btn" onclick="copyCommand(this)">복사</button>
@@ -643,19 +680,21 @@ exit</div>
             <div class="slide-header">
                 <div>
                     <span class="slide-step">Step 6</span>
-                    <h2 class="slide-title">가상 메모리 페이징 및 Page Fault 시뮬레이션</h2>
+                    <h2 class="slide-title">가상 메모리 페이징 및 Page Fault 구현</h2>
                 </div>
             </div>
             <div class="slide-content">
                 <div class="desc-section">
-                    <h3>💡 구현 내용</h3>
+                    <h3>💡 페이징 및 주소 번역 공식</h3>
+                    <div class="math-box">
+                        페이지 번호 = 가상 주소 / 페이지 크기 (128B)<br>
+                        오프셋 = 가상 주소 % 페이지 크기 (128B)<br>
+                        물리 주소 = (물리 프레임 번호 * 128) + 오프셋
+                    </div>
                     <ul class="desc-list">
-                        <li><strong>물리 RAM 1KB (프레임 크기 128B, 총 8개 프레임)</strong> 및 가상 페이지 테이블(최대 16개 엔트리) 구조 시뮬레이션.</li>
-                        <li><strong>memsim &lt;scenario_file&gt;</strong> 명령어로 시나리오 파일을 순차 해석.</li>
-                        <li><code>ALLOC &lt;page&gt;</code>: 비어 있는 물리 메모리 프레임을 검색하여 페이지 테이블에 유효 비트(is_valid=1)와 함께 순차 매핑.</li>
-                        <li><code>ACCESS &lt;virtual_addr&gt;</code>: 주소 변환(Address Translation) 수행.
-                          <br>&bull; 가상 페이지 번호(VA / Page Size)가 유효(Valid)할 시, 매핑된 프레임 번호로 변환하여 물리 주소(PA) 계산.
-                          <br>&bull; 매핑되지 않은 가상 페이지 접근 시 <strong>Page Fault</strong> 예외 발생.</li>
+                        <li><strong>물리 메모리 사양</strong>: 1KB RAM 크기 (128B 프레임 8개), 가상 페이지 테이블(엔트리 16개).</li>
+                        <li><strong>Page Fault 예외 처리</strong>: 가상 메모리에 접근(`ACCESS`)하려 할 때, 해당 페이지가 페이지 테이블 상에 매핑(`is_valid=0`)되어 있지 않은 경우 Page Fault 예외 출력.</li>
+                        <li><strong>ALLOC & ACCESS 연계 시뮬레이션</strong>: `ALLOC`을 통해 가용 프레임을 매핑한 후, 주소 번역이 최종 물리 주소로 성공적으로 완수되는 흐름 검증.</li>
                     </ul>
                     <div class="command-box">
                         <button class="copy-btn" onclick="copyCommand(this)">복사</button>
