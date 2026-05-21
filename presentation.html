@@ -450,6 +450,37 @@
             font-weight: bold;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+
+        /* PDF 인쇄 및 내보내기용 스타일 */
+        @media print {
+            body {
+                background-color: #ffffff;
+                height: auto;
+                overflow: visible;
+            }
+            .presentation-container {
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+                display: block;
+            }
+            .slide {
+                display: flex !important; /* 모든 슬라이드를 화면에 표시 */
+                page-break-after: always;
+                break-after: page;
+                box-shadow: none;
+                border: none;
+                padding: 1.5cm;
+                height: 297mm; /* A4 가로 인쇄 규격 매핑용 */
+                min-height: 100vh;
+                margin: 0;
+            }
+            .keyboard-guide,
+            .progress-container,
+            .navigation-controls {
+                display: none !important; /* UI 컨트롤 숨김 */
+            }
+        }
     </style>
 </head>
 <body>
