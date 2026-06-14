@@ -8,3 +8,10 @@ TOS
 
 # VS Code 설정 폴더 제외
 .vscode/
+
+# Windows metadata
+*Zone.Identifier
+
+# PowerPoint files
+*.pptx
+
